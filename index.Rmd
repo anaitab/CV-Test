@@ -1,22 +1,22 @@
 ---
-title: "Nick Strayer's CV"
-author: Nick Strayer
+title: Ana Egatz-Gomez's Resume
+author: Ana Egatz-Gomez
 date: "`r Sys.Date()`"
 output:
   pagedown::html_resume:
-    css: ['css/styles.css', 'resume']
+    css: ['css/custom_resume.css', 'css/styles.css', 'resume']
     # set it to true for a self-contained HTML page but it'll take longer to render
     self_contained: true
 ---
+
 
 ```{r, include=FALSE}
 knitr::opts_chunk$set(
   results='asis', 
   echo = FALSE
 )
-
-library(glue)
 library(tidyverse)
+library(glue)
 
 # Set this to true to have links turned into footnotes at the end of the document
 PDF_EXPORT <- FALSE
@@ -26,21 +26,135 @@ links <- c()
 
 source('parsing_functions.R')
 
-# Load csv with position info
-position_data <- read_csv('positions.csv')
+
+# First let's get the data, filtering to only the items tagged as
+# Resume items
+position_data <- read_csv('positions.csv') %>% 
+  filter(in_resume) %>% 
+  mutate(
+    # Build some custom sections by collapsing others
+    section = case_when(
+      section %in% c('research_positions', 'industry_positions') ~ 'positions', 
+      section %in% c('academic_articles') ~ 'writings',
+      section %in% c('patent_app', 'patents') ~ 'patents',
+      TRUE ~ section
+    )
+  ) 
+
 ```
 
 
 ```{r}
-# When in export mode the little dots are unaligned, so fix that. 
-if(PDF_EXPORT){
-  cat("
-  <style>
-  :root{
-    --decorator-outer-offset-left: -6.5px;
+# Regex to locate links in text
+find_link <- regex("
+  \\[   # Grab opening square bracket
+  .+?   # Find smallest internal text as possible
+  \\]   # Closing square bracket
+  \\(   # Opening parenthesis
+  .+?   # Link text, again as small as possible
+  \\)   # Closing parenthesis
+  ",
+                   comments = TRUE)
+
+# Function that removes links from text and replaces them with superscripts that are 
+# referenced in an end-of-document list. 
+sanitize_links <- function(text){
+  if(PDF_EXPORT){
+    str_extract_all(text, find_link) %>% 
+      pluck(1) %>% 
+      walk(function(link_from_text){
+        title <- link_from_text %>% str_extract('\\[.+\\]') %>% str_remove_all('\\[|\\]') 
+        link <- link_from_text %>% str_extract('\\(.+\\)') %>% str_remove_all('\\(|\\)')
+        
+        # add link to links array
+        links <<- c(links, link)
+        
+        # Build replacement text
+        new_text <- glue('{title}<sup>{length(links)}</sup>')
+        
+        # Replace text
+        text <<- text %>% str_replace(fixed(link_from_text), new_text)
+      })
   }
-  </style>")
+  text
 }
+
+# Take entire positions dataframe and removes the links 
+# in descending order so links for the same position are
+# right next to eachother in number. 
+strip_links_from_cols <- function(data, cols_to_strip){
+  for(i in 1:nrow(data)){
+    for(col in cols_to_strip){
+      data[i, col] <- sanitize_links(data[i, col])
+    }
+  }
+  data
+}
+
+# Take a position dataframe and the section id desired
+# and prints the section to markdown. 
+print_section <- function(position_data, section_id){
+  position_data %>% 
+    filter(section == section_id) %>% 
+    arrange(desc(end)) %>% 
+    mutate(id = 1:n()) %>% 
+    pivot_longer(
+      starts_with('description'),
+      names_to = 'description_num',
+      values_to = 'description'
+    ) %>% 
+    filter(!is.na(description) | description_num == 'description_1') %>%
+    group_by(id) %>% 
+    mutate(
+      descriptions = list(description),
+      no_descriptions = is.na(first(description))
+    ) %>% 
+    ungroup() %>% 
+    filter(description_num == 'description_1') %>% 
+    mutate(
+      timeline = ifelse(
+        is.na(start) | start == end,
+        end,
+        glue('{end} - {start}')
+      ),
+      description_bullets = ifelse(
+        no_descriptions,
+        ' ',
+        map_chr(descriptions, ~paste('-', ., collapse = '\n'))
+      )
+    ) %>% 
+    strip_links_from_cols(c('title', 'description_bullets')) %>% 
+    mutate_all(~ifelse(is.na(.), 'N/A', .)) %>% 
+    glue_data(
+      "### {title}",
+      "\n\n",
+      "{loc}",
+      "\n\n",
+      "{institution}",
+      "\n\n",
+      "{timeline}", 
+      "\n\n",
+      "{description_bullets}",
+      "\n\n\n",
+    )
+}
+
+# Construct a bar chart of skills
+build_skill_bars <- function(skills, out_of = 5){
+  bar_color <- "#969696"
+  bar_background <- "#d9d9d9"
+  skills %>% 
+    mutate(width_percent = round(100*level/out_of)) %>% 
+    glue_data(
+      "<div class = 'skill-bar'",
+      "style = \"background:linear-gradient(to right,",
+      "{bar_color} {width_percent}%,",
+      "{bar_background} {width_percent}% 100%)\" >",
+      "{skill}",
+      "</div>"
+    )
+}
+
 ```
 
 
@@ -50,55 +164,57 @@ Aside
 
 ![logo](beta_dist.png){width=100%}
 
-```{r}
-# When in export mode the little dots are unaligned, so fix that. 
-if(PDF_EXPORT){
-  cat("View this CV online with links at _nickstrayer.me/cv_")
-} else {
-  cat("[<i class='fas fa-download'></i> Download a PDF of this CV](https://github.com/nstrayer/cv/raw/master/strayer_cv.pdf)")
-}
-```
-
 Contact {#contact}
 --------------------------------------------------------------------------------
 
 
-- <i class="fa fa-envelope"></i> nick.strayer@gmail.com
-- <i class="fa fa-twitter"></i> NicholasStrayer
-- <i class="fa fa-github"></i> github.com/nstrayer
-- <i class="fa fa-link"></i> [nickstrayer.me](http://nickstrayer.me/)
-- <i class="fa fa-phone"></i> (734) 645-0110
+
+- <i class="fa fa-envelope"></i> angomez@asu.edu
+- <i class="fa fa-github"></i> github.com/anaitab
+- <i class="fa fa-phone"></i> (480) 748-07595
 
 
 
 Language Skills {#skills}
 --------------------------------------------------------------------------------
 
+
 ```{r}
 skills <- tribble(
   ~skill,               ~level,
-  "R",                  5,
-  "Javascript (d3.js)", 4.5,
-  "Python",             4,
-  "Bash",               3.5,
-  "SQL",                3,
-  "C++",                3,
-  "AWK",                3
+  "English",                  5,
+  "Spanish", 5,
+  "Italian",             3.5,
+  "R",               2.5,
+  "Matlab",                3
 )
-
 build_skill_bars(skills)
 ```
 
 
 
+Unpaid Contributions {#open-source}
+--------------------------------------------------------------------------------
+
+
+- Rasing two kids
+- Supporting my husband's career
+- Maintaining my house
+- Taking care of two dogs
+
+
+More info {#more-info}
+--------------------------------------------------------------------------------
+
+See full CV at anaegatz.me/cv for more complete list of positions and publications.
 
 
 Disclaimer {#disclaimer}
 --------------------------------------------------------------------------------
 
-Made with the R package [**pagedown**](https://github.com/rstudio/pagedown). 
+Made w/ [**pagedown**](https://github.com/rstudio/pagedown). 
 
-The source code is available at [github.com/nstrayer/cv](https://github.com/nstrayer/cv).
+Source code: [github.com/anaitab/CV-Test](https://github.com/anaitab/CV-Test).
 
 Last updated on `r Sys.Date()`.
 
@@ -108,15 +224,13 @@ Last updated on `r Sys.Date()`.
 Main
 ================================================================================
 
-Nick Strayer {#title}
+Ana Egatz-Gomez {#title}
 --------------------------------------------------------------------------------
 
-
 ```{r}
-intro_text <- "I have made [visualizations viewed by hundreds of thousands of people](https://www.nytimes.com/interactive/2016/08/26/us/college-student-migration.html), [sped up query times for 25 terabytes of data by an average of 4,800 times](https://livefreeordichotomize.com/2019/06/04/using_awk_and_r_to_parse_25tb/), and built [packages for R](https://github.com/nstrayer/shinysense) that let you [do magic](http://nickstrayer.me/dataDayTexas/).
-
-Currently searching for a data science position that allows me to build tools using visualization and machine learning to help people explore and understand their data. 
+intro_text <- " THIS IS A FICTIONAL RESUME FOR TEMPLATE LEARNING. Currently searching for a data science position that allows me to build tools using visualization and machine learning to help people explore and understand their data. 
 "
+
 
 cat(sanitize_links(intro_text))
 ```
@@ -127,105 +241,24 @@ Education {data-icon=graduation-cap data-concise=true}
 --------------------------------------------------------------------------------
 
 ```{r}
-print_section(position_data, 'education')
+position_data %>% print_section('education')
 ```
 
 
 
-Research Experience {data-icon=laptop}
+Selected Positions {data-icon=suitcase}
 --------------------------------------------------------------------------------
 
 ```{r}
-print_section(position_data, 'research_positions')
+position_data %>% print_section('positions')
 ```
 
-
-
-Industry Experience {data-icon=suitcase}
---------------------------------------------------------------------------------
-
-::: aside
-I have worked in a variety of roles ranging from journalist to software engineer to data scientist. I like collaborative environments where I can learn from my peers. 
-:::
-
-```{r}
-print_section(position_data, 'industry_positions')
-```
-
-<br>
-<br>
-<br>
-
-Teaching Experience {data-icon=chalkboard-teacher}
---------------------------------------------------------------------------------
-
-::: aside
-I am passionate about education. I believe that no topic is too complex if the teacher is empathetic and willing to think about new methods of approaching task. 
-:::
-
-```{r}
-print_section(position_data, 'teaching_positions')
-```
-
-
-Selected Data Science Writing {data-icon=chart-line}
+Selected Writing {data-icon=newspaper}
 --------------------------------------------------------------------------------
 
 
-::: aside
-I regularly blog about data science and visualization on my blog [LiveFreeOrDichotomize.](https://livefreeordichotomize.com/)
-:::
-
 ```{r}
-print_section(position_data, 'data_science_writings')
-```
-
-
-
-Selected Press (About)  {data-icon=newspaper}
---------------------------------------------------------------------------------
-
-```{r}
-print_section(position_data, 'about_me_press')
-```
-
-
-
-Selected Press (By)  {data-icon=newspaper}
---------------------------------------------------------------------------------
-
-```{r}
-print_section(position_data, 'by_me_press')
-```
-
-
-
-
-Selected Publications, Posters, and Talks {data-icon=book}
---------------------------------------------------------------------------------
-
-```{r}
-print_section(position_data, 'academic_articles')
-```
-
-
-
-```{r}
-if(PDF_EXPORT){
-  cat("
-  
-Links {data-icon=link}
---------------------------------------------------------------------------------
-
-<br>
-
-
-")
-  
-  walk2(links, 1:length(links), function(link, index){
-    print(glue('{index}. {link}'))
-  })
-}
+position_data %>% print_section('writings')
 ```
 
 
