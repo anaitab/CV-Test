@@ -1,0 +1,19 @@
+section,in_resume,title,institution,loc,start,end,description_1,description_2,description_3
+education,TRUE,"PhD.,  Biomedical Engineering",Arizona State University,"Tempe, AZ, USA",2004,2009,Thesis: Digital Magnetofluidics and Molecular Separations in a Drop,NA,NA
+education,TRUE,"MS., Industrial Economics",Carlos III University of Madrid,"Madrid, Spain",2000,2002,Thesis: Human Resources and Technology Management,NA,NA
+education,TRUE,"Bachelor of Engineering, Electronics",National Technologic University at Mendoza,"Mendoza, Argentina",1985,1994,Development of a Programmable Controller for Theater Light and Sound Effects,NA,NA
+research_positions,TRUE,Science Writer,"College of Health Solutions, Arizona State University","Remote, Phoenix, Arizona",2023,2024,NA,NA,NA
+research_positions,TRUE,coming soon,,,2009,2023,,,
+industry_positions,TRUE,coming soon,,,1994,2002,,,
+industry_positions,TRUE,Maintenance Engineer,"Western Atlas, Inc","Catriel, Argentina; and Odessa, TX, USA",1996,1996,Preventive and corrective maintenance of geological borewell logging tools,NA,NA
+teaching_positions,TRUE,coming soon,,,1990,1997,,,
+teaching_positions,TRUE,Management of Human Resources in the Technology Sector,Carlos III University of Madrid,"Remote, Madrid, Spain",2003,2004,,,Graduate level class
+academic_articles,TRUE,Intracellular Amyloid-_ Detection from Human Brain Sections Using a Microfluidic Immunoassay in Tandem with MALDI-MS,Analytical Chemistry,NA,2023,2023,American Chemical Society,,NA
+academic_articles,TRUE,Modular droplet injector for sample conservation providing new structural insight for the conformational heterogeneity in the disease-associated NQO1 enzyme,Lab on a Chip,NA,2023,2023,Royal Society of Chemistry,,NA
+patents,TRUE,Metal electrode based 3D printed device for tuning microfluidic droplet generation frequency and synchronizing phase for serial femtosecond crystallography,,,2021,2021,"US Patent 10,969,350",,
+patents,TRUE,Modular 3-D printed devices for sample delivery and method,Arizona State University,,2022,2022,"US Patent 11,485,632",,
+patents,TRUE,Continuous synthesis of upconverting nanoparticles,Arizona State University,,2023,2023,"US Patent 11,649,173",,
+patents,TRUE,Device for tuning microfluidic droplet frequency and synchronizing phase for serial femtosecond crystallography,Arizona State University,,2024,2024,"US Patent 11,867,644",,
+patents,TRUE,Continuous synthesis of upconverting nanoparticles,Arizona State University,,2024,2024,"US Patent 12,017,924",,
+patent_app,TRUE,Coupling laser capture microdissection with microfluidic sample preparation and mass spectrometry,Arizona State University,,2024,2024,"US Patent App. 18/335,713",,
+patent_app,TRUE,Device for tuning microfluidic droplet frequency and synchronizing phase for serial femtosecond crystallography,Arizona State University,,2024,2024,"US Patent App. 18/504,091",,
